@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { AuthRepository } from "./auth.repository.js";
-import type { RegisterDTO, LoginDTO, RefreshTokenDTO, AuthResponse, JwtPayload } from "./auth.types.js";
+import type { RegisterDTO, LoginDTO, AuthSession, JwtPayload, SafeUser, User } from "./auth.types.js";
 
 const ACCESS_TOKEN_SECRET = process.env.JWT_ACCESS_SECRET || "your-access-secret";
 const REFRESH_TOKEN_SECRET = process.env.JWT_REFRESH_SECRET || "your-refresh-secret";
@@ -31,12 +31,12 @@ export class AuthService {
     return jwt.verify(token, REFRESH_TOKEN_SECRET) as JwtPayload;
   }
 
-  private sanitizeUser(user: any): Omit<any, "password"> {
-    const { password, ...safeUser } = user;
+  private sanitizeUser(user: User): SafeUser {
+    const { password: _password, providerId: _providerId, ...safeUser } = user;
     return safeUser;
   }
 
-  async register(data: RegisterDTO): Promise<AuthResponse> {
+  async register(data: RegisterDTO): Promise<AuthSession> {
     const existingUser = await this.authRepo.findByEmail(data.email);
     if (existingUser) {
       throw new Error("Email already registered");
@@ -67,7 +67,7 @@ export class AuthService {
     };
   }
 
-  async login(data: LoginDTO): Promise<AuthResponse> {
+  async login(data: LoginDTO): Promise<AuthSession> {
     const user = await this.authRepo.findByEmail(data.email);
     if (!user) {
       throw new Error("Invalid email or password");
@@ -78,8 +78,8 @@ export class AuthService {
       throw new Error("Invalid email or password");
     }
 
-    if (!user.isActive) {
-      throw new Error("Account is deactivated");
+    if (user.status === "BANNED") {
+      throw new Error("Account is banned");
     }
 
     await this.authRepo.updateLastLogin(user.id);
@@ -100,13 +100,17 @@ export class AuthService {
     };
   }
 
-  async refreshToken(data: RefreshTokenDTO): Promise<{ accessToken: string }> {
+  async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {
     try {
-      const payload = this.verifyRefreshToken(data.refreshToken);
+      const payload = this.verifyRefreshToken(refreshToken);
 
       const user = await this.authRepo.findById(payload.userId);
       if (!user) {
         throw new Error("User not found");
+      }
+
+      if (user.status === "BANNED") {
+        throw new Error("Account is banned");
       }
 
       const newPayload: JwtPayload = {

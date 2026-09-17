@@ -20,7 +20,7 @@ export const openapiDocument = {
   components: {
     securitySchemes: {
       bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT" },
-      refreshCookie: { type: "apiKey", in: "cookie", name: "storefrontRefreshToken" },
+      refreshCookie: { type: "apiKey", in: "cookie", name: "shopco_storefront_refresh_token" },
     },
     schemas: {
       Error: {
@@ -39,6 +39,40 @@ export const openapiDocument = {
           slug: { type: "string" },
           basePrice: { type: "number" },
           status: { type: "string", enum: ["DRAFT", "ACTIVE", "ARCHIVED"] },
+        },
+      },
+      User: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          email: { type: "string", format: "email" },
+          name: { type: "string" },
+          phone: { type: "string", nullable: true },
+          avatar: { type: "string", format: "uri", nullable: true },
+          role: { type: "string", enum: ["CUSTOMER", "ADMIN", "STAFF"] },
+          dateOfBirth: { type: "string", format: "date-time", nullable: true },
+          deletedAt: { type: "string", format: "date-time", nullable: true },
+          emailVerifiedAt: { type: "string", format: "date-time", nullable: true },
+          gender: { type: "string", enum: ["MALE", "FEMALE", "OTHER"], nullable: true },
+          lastLoginAt: { type: "string", format: "date-time", nullable: true },
+          phoneVerifiedAt: { type: "string", format: "date-time", nullable: true },
+          provider: { type: "string", enum: ["LOCAL", "GOOGLE", "FACEBOOK"] },
+          status: { type: "string", enum: ["ACTIVE", "BANNED"] },
+          createdAt: { type: "string", format: "date-time" },
+          updatedAt: { type: "string", format: "date-time" },
+        },
+      },
+      UserUpdateRequest: {
+        type: "object",
+        properties: {
+          email: { type: "string", format: "email" },
+          name: { type: "string", minLength: 2 },
+          phone: { type: "string" },
+          avatar: { type: "string", format: "uri", nullable: true },
+          role: { type: "string", enum: ["CUSTOMER", "ADMIN", "STAFF"] },
+          dateOfBirth: { type: "string", format: "date", nullable: true },
+          gender: { type: "string", enum: ["MALE", "FEMALE", "OTHER"], nullable: true },
+          status: { type: "string", enum: ["ACTIVE", "BANNED"] },
         },
       },
       LoginRequest: {
@@ -74,6 +108,18 @@ export const openapiDocument = {
     },
     "/api/auth/logout": {
       post: { tags: ["Auth"], summary: "Logout", responses: { "200": { description: "Refresh cookies cleared" } } },
+    },
+    "/api/users": {
+      get: { tags: ["Users"], summary: "List users", responses: { "200": { description: "Sanitized user list", content: { "application/json": { schema: { type: "array", items: { $ref: "#/components/schemas/User" } } } } } } },
+      post: { tags: ["Users"], summary: "Create user", responses: { "201": { description: "Created sanitized user" } } },
+    },
+    "/api/users/{id}": {
+      get: { tags: ["Users"], summary: "Get user by ID", parameters: [{ $ref: "#/components/parameters/Id" }], responses: { "200": { description: "Sanitized user", content: { "application/json": { schema: { $ref: "#/components/schemas/User" } } } }, "404": { description: "Not found" } } },
+      put: { tags: ["Users"], summary: "Update user", parameters: [{ $ref: "#/components/parameters/Id" }], requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/UserUpdateRequest" } } } }, responses: { "200": { description: "Updated sanitized user" } } },
+      delete: { tags: ["Users"], summary: "Delete user", parameters: [{ $ref: "#/components/parameters/Id" }], responses: { "200": { description: "Deleted" } } },
+    },
+    "/api/users/email/{email}": {
+      get: { tags: ["Users"], summary: "Get user by email", parameters: [{ name: "email", in: "path", required: true, schema: { type: "string", format: "email" } }], responses: { "200": { description: "Sanitized user" }, "404": { description: "Not found" } } },
     },
     "/api/users/me": {
       get: { tags: ["Users"], summary: "Get current user", security: bearerSecurity, responses: { "200": { description: "Current user" }, "401": { $ref: "#/components/responses/Unauthorized" } } },

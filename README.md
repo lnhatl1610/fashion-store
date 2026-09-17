@@ -2,6 +2,16 @@
 
 SHOP.CO is a full-stack e-commerce platform for fashion retail. The project is organized as a TypeScript monorepo with an Express API, PostgreSQL database and two React applications: a customer storefront and an administration dashboard.
 
+## Documentation
+
+Detailed technical documentation is available in the [docs index](docs/README.md), organized by:
+
+- [Admin frontend](docs/admin/overview.md)
+- [Storefront frontend](docs/storefront/overview.md)
+- [Backend API](docs/api/overview.md)
+- [Shared development and operations](docs/shared/environment-variables.md)
+- [Project specifications](specs/README.md)
+
 ## Demo / Screenshots
 
 No live demo or screenshots are configured yet. Run the applications locally using the instructions below.
@@ -105,6 +115,8 @@ By default, the API runs on `http://localhost:3000`. Vite prints the local URLs 
 | `DATABASE_URL` | Yes | PostgreSQL connection string used by Prisma |
 | `PORT` | No | API port; defaults to `3000` |
 | `NODE_ENV` | No | Runtime environment, for example `development` or `production` |
+| `CLIENT_ORIGINS` | No | Comma-separated browser origins allowed to send auth cookies; defaults to local ports `5173` and `5174` |
+| `AUTH_COOKIE_SAME_SITE` | No | Refresh-cookie SameSite policy: `lax` by default; use `none` with HTTPS for cross-site deployments |
 | `JWT_ACCESS_SECRET` | Yes | Secret used to sign access tokens |
 | `JWT_REFRESH_SECRET` | Yes | Secret used to sign refresh tokens |
 | `CLOUDINARY_CLOUD_NAME` | When uploading media | Cloudinary cloud name |
@@ -177,6 +189,8 @@ Main route groups include:
 | Wishlists | `GET /api/wishlists`, `POST /api/wishlists`, `DELETE /api/wishlists/:productId` | Bearer JWT |
 | Reviews | `GET /api/reviews/product/:productId`, `POST /api/reviews`, `PUT /api/reviews/:id` | Read public; writes authenticated |
 | Coupons | `GET /api/coupons`, `POST /api/coupons`, `PUT /api/coupons/:id` | Admin or staff |
+| Dashboard | `GET /api/dashboard/overview?range=7d`, with `7d`, `30d` or `12m` | Admin or staff |
+| Orders | `GET /api/orders`, `PUT /api/orders/:id/status` | Admin or staff |
 | Catalog experience | Brands, product questions, shipping quotes, returns, media, promotions, bundles and inventory | Varies by operation |
 
 OpenAPI content is maintained in [`fashion-api/src/docs/openapi.ts`](fashion-api/src/docs/openapi.ts), with Swagger helpers in [`fashion-api/src/docs/swagger.ts`](fashion-api/src/docs/swagger.ts). Swagger is not currently mounted as an HTTP endpoint in `src/app.ts`; add a route there before advertising a `/docs` URL.
@@ -186,6 +200,8 @@ Authenticated requests use:
 ```http
 Authorization: Bearer <access-token>
 ```
+
+Refresh tokens are stored in client-specific `HttpOnly` cookies and are not exposed to JavaScript. The admin and storefront cookies are separate; browser clients must send requests with credentials enabled.
 
 ## Database Schema
 

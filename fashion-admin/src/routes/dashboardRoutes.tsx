@@ -7,6 +7,7 @@ import { CategoriesPage } from "@/features/categories";
 import { InventoryPage } from "@/features/inventory/InventoryPage";
 import { CouponsPage } from "@/features/coupons/CouponsPage";
 import { ReviewsPage } from "@/features/reviews/ReviewsPage";
+import { OrdersPage } from "@/features/orders";
 import { AuthPage } from "@/features/auth/AuthPage";
 import { ProtectedRoute } from "./ProtectedRoute";
 
@@ -29,6 +30,10 @@ const dashboardRoutes = [
       {
         path: "users",
         element: <UserPage />,
+      },
+      {
+        path: "orders",
+        element: <OrdersPage />,
       },
       {
         path: "products",

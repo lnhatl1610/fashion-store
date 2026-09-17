@@ -2,6 +2,10 @@
 
 ## Stack and boundaries
 
+## Specs and documentation
+
+Before changing backend behavior, read the root AGENTS.md, the relevant files in specs/api/ or specs/shared/, and the matching files in docs/api/ or docs/shared/. After changing routes, DTOs, validation, authentication, authorization, schema, migrations, environment variables or operational behavior, update the directly affected specs/docs in the same task. Update this file only when backend agent rules or verification requirements change.
+
 The API uses Node.js, Express 5, TypeScript ESM, PostgreSQL and Prisma. Keep all backend code under `fashion-api`; frontend apps consume HTTP APIs only.
 
 ## Module architecture

@@ -2,6 +2,10 @@
 
 ## Stack and structure
 
+## Specs and documentation
+
+Before changing admin behavior, read the root AGENTS.md, the relevant files in specs/admin/ or specs/shared/, and the matching files in docs/admin/ or docs/shared/. After changing routes, permissions, widgets, forms, tables, filters, pagination, environment or verification behavior, update the directly affected specs/docs in the same task. Update this file only when admin-specific agent rules or verification requirements change.
+
 This app uses React 19, TypeScript, Vite, Tailwind CSS v4, shadcn-style components, React Router v7 and Axios.
 
 ```text

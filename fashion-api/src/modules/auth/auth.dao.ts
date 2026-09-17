@@ -28,7 +28,7 @@ export class AuthDAO {
   async updateLastLogin(id: string): Promise<User> {
     return await prisma.user.update({
       where: { id },
-      data: { updatedAt: new Date() },
+      data: { lastLoginAt: new Date() },
     });
   }
 }

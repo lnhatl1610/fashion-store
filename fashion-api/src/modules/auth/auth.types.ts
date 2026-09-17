@@ -1,10 +1,14 @@
 import type { User as PrismaUser } from "@prisma/client";
 
 export interface User extends PrismaUser {}
+export type SafeUser = Omit<User, "password" | "providerId">;
 
 export interface AuthResponse {
-  user: Omit<User, "password">;
+  user: SafeUser;
   accessToken: string;
+}
+
+export interface AuthSession extends AuthResponse {
   refreshToken: string;
 }
 
@@ -18,10 +22,6 @@ export interface RegisterDTO {
   email: string;
   password: string;
   phone?: string;
-}
-
-export interface RefreshTokenDTO {
-  refreshToken: string;
 }
 
 export interface JwtPayload {

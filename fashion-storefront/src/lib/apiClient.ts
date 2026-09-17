@@ -6,8 +6,8 @@ import type { ApiEnvelope } from "@/types/api";
 interface RetryableRequest extends InternalAxiosRequestConfig { _retry?: boolean }
 let refreshRequest: Promise<string> | null = null;
 
-// Auth tokens are sent explicitly in the Authorization header; no cross-origin cookies are required.
-export const apiClient = axios.create({ baseURL: API_BASE_URL, timeout: 10_000, withCredentials: false, headers: { "X-Client-App": "storefront" } });
+// The refresh token is an HttpOnly cookie; access tokens are sent explicitly in this header.
+export const apiClient = axios.create({ baseURL: API_BASE_URL, timeout: 10_000, withCredentials: true, headers: { "X-Client-App": "storefront" } });
 
 apiClient.interceptors.request.use((config) => {
   const token = authToken.get();
@@ -23,7 +23,7 @@ apiClient.interceptors.response.use(
     const isAuthCall = ["/auth/login", "/auth/register", "/auth/refresh", "/auth/forgot-password", "/auth/reset-password"].some((path) => url.includes(path));
     if (error.response?.status !== 401 || !request || request._retry || isAuthCall) return Promise.reject(error);
     request._retry = true;
-    refreshRequest ??= axios.post<ApiEnvelope<{ accessToken: string }>>(`${API_BASE_URL}/auth/refresh`, { refreshToken: authToken.getRefresh() }).then((response) => {
+    refreshRequest ??= apiClient.post<ApiEnvelope<{ accessToken: string }>>("/auth/refresh").then((response) => {
       const token = response.data.data.accessToken;
       authToken.set(token);
       return token;

@@ -21,6 +21,23 @@ enum Role {
   STAFF
 }
 
+enum UserStatus {
+  ACTIVE
+  BANNED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum AuthProvider {
+  LOCAL
+  GOOGLE
+  FACEBOOK
+}
+
 enum ProductStatus {
   DRAFT
   ACTIVE
@@ -93,7 +110,6 @@ model User {
   phone     String?
   avatar    String?
   role      Role       @default(CUSTOMER)
-  isActive  Boolean    @default(true)
   addresses Address[]
   orders    Order[]
   reviews   Review[]
@@ -106,6 +122,18 @@ model User {
   cart      Cart?
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+  dateOfBirth DateTime?
+  deletedAt DateTime?
+  emailVerifiedAt DateTime?
+  gender Gender?
+  lastLoginAt DateTime?
+  phoneVerifiedAt DateTime?
+  provider AuthProvider @default(LOCAL)
+  providerId String?
+  status UserStatus @default(ACTIVE)
+
+  @@index([status])
+  @@index([provider, providerId])
 
   @@map("users")
 }

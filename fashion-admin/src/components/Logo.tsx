@@ -1,9 +1,13 @@
 import { Link } from 'react-router-dom'
 
-const Logo = () => {
+interface LogoProps {
+    className?: string
+}
+
+const Logo = ({ className = 'h-10 rounded-xl' }: LogoProps) => {
     return (
         <Link to='/'>
-            <img src='/logo.jpg' alt='Logo' className='h-10 rounded-xl' />
+            <img src='/logo.jpg' alt='Logo' className={className} />
         </Link>
     )
 }

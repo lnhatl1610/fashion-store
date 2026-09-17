@@ -2,6 +2,10 @@
 
 ## Stack and boundaries
 
+## Specs and documentation
+
+Before changing storefront behavior, read the root AGENTS.md, the relevant files in specs/storefront/ or specs/shared/, and the matching files in docs/storefront/ or docs/shared/. After changing routes, auth, cart, checkout, catalog, responsive behavior, SEO, performance or API usage, update the directly affected specs/docs in the same task. Update this file only when storefront-specific agent rules or verification requirements change.
+
 The customer storefront uses React 19, TypeScript, Vite, Tailwind CSS v4, React Router v7, React Query, Axios, Zustand and shadcn-style primitives. Keep storefront code under `fashion-storefront`; communicate with the API through HTTP only.
 
 ## Architecture

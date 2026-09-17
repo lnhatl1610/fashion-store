@@ -1,4 +1,4 @@
-import type { Role } from "./user.types.js";
+import type { Gender, Role, UserStatus } from "./user.types.js";
 
 export interface CreateUserDTO {
   email: string;
@@ -14,7 +14,9 @@ export interface UpdateUserDTO {
   password?: string;
   name?: string;
   phone?: string;
-  avatar?: string;
+  avatar?: string | null;
   role?: Role;
-  isActive?: boolean;
+  dateOfBirth?: Date | null;
+  gender?: Gender | null;
+  status?: UserStatus;
 }

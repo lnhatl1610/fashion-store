@@ -1,11 +1,14 @@
 import type { Request, Response } from "express";
 import { UserService } from "./user.service.js";
 import type { CreateUserDTO, UpdateUserDTO } from "./user.dto.js";
+import type { SafeUser, User } from "./user.types.js";
 import { sendSuccess, sendError } from "../../lib/response.js";
 
-const sanitizeUser = (user: any) => {
+const getErrorMessage = (error: unknown): string => error instanceof Error ? error.message : "Unknown error";
+
+const sanitizeUser = (user: User | null): SafeUser | null => {
   if (!user) return user;
-  const { password, ...safeUser } = user;
+  const { password: _password, providerId: _providerId, ...safeUser } = user;
   return safeUser;
 };
 
@@ -27,8 +30,8 @@ export class UserController {
 
       const user = await this.userService.createUser(data);
       return sendSuccess(res, sanitizeUser(user), "User created successfully", 201);
-    } catch (err: any) {
-      return sendError(res, "Failed to create user", 500, err.message ?? err);
+    } catch (err: unknown) {
+      return sendError(res, "Failed to create user", 500, getErrorMessage(err));
     }
   };
 
@@ -36,8 +39,8 @@ export class UserController {
     try {
       const users = await this.userService.getAllUsers();
       return sendSuccess(res, users.map(sanitizeUser), "Users fetched successfully");
-    } catch (err: any) {
-      return sendError(res, "Failed to fetch users", 500, err.message ?? err);
+    } catch (err: unknown) {
+      return sendError(res, "Failed to fetch users", 500, getErrorMessage(err));
     }
   };
 
@@ -55,8 +58,8 @@ export class UserController {
       }
 
       return sendSuccess(res, sanitizeUser(user), "User fetched successfully");
-    } catch (err: any) {
-      return sendError(res, "Failed to fetch user", 500, err.message ?? err);
+    } catch (err: unknown) {
+      return sendError(res, "Failed to fetch user", 500, getErrorMessage(err));
     }
   };
 
@@ -74,8 +77,8 @@ export class UserController {
       }
 
       return sendSuccess(res, sanitizeUser(user), "User fetched successfully");
-    } catch (err: any) {
-      return sendError(res, "Failed to fetch user", 500, err.message ?? err);
+    } catch (err: unknown) {
+      return sendError(res, "Failed to fetch user", 500, getErrorMessage(err));
     }
   };
 
@@ -94,8 +97,8 @@ export class UserController {
       }
 
       return sendSuccess(res, sanitizeUser(user), "User updated successfully");
-    } catch (err: any) {
-      return sendError(res, "Failed to update user", 500, err.message ?? err);
+    } catch (err: unknown) {
+      return sendError(res, "Failed to update user", 500, getErrorMessage(err));
     }
   };
 
@@ -113,8 +116,8 @@ export class UserController {
       }
 
       return sendSuccess(res, null, "User deleted successfully");
-    } catch (err: any) {
-      return sendError(res, "Failed to delete user", 500, err.message ?? err);
+    } catch (err: unknown) {
+      return sendError(res, "Failed to delete user", 500, getErrorMessage(err));
     }
   };
 }
