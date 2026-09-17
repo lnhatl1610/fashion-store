@@ -31,6 +31,17 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
   }
 };
 
+export const optionalAuth = (req: Request, _res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith("Bearer ")) return next();
+  try {
+    req.user = jwt.verify(authHeader.substring(7), ACCESS_TOKEN_SECRET) as JwtPayload;
+  } catch {
+    // Anonymous access remains valid when an optional token is invalid.
+  }
+  next();
+};
+
 export const requireRole = (...allowedRoles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {

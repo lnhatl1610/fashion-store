@@ -3,6 +3,10 @@
     "target": "ESNext",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "baseUrl": ".",
+    "paths": {
+      "@prisma/client": ["generated/prisma/index.d.ts"]
+    },
     "esModuleInterop": true,
     "outDir": "dist",
     "rootDir": "src",

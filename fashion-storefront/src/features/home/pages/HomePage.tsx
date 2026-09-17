@@ -10,6 +10,7 @@ import { Helmet } from "react-helmet-async";
 
 export function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
@@ -21,7 +22,8 @@ export function HomePage() {
       })
       .catch(() => {
         // The curated storefront remains visible when the API is unavailable.
-      });
+      })
+      .finally(() => { if (active) setLoading(false); });
 
     return () => {
       active = false;
@@ -34,9 +36,9 @@ export function HomePage() {
       <HeroSection />
       <BrandStrip />
       <main className="mx-auto max-w-7xl px-4 pb-8 sm:px-8">
-        <ProductShowcase id="new-arrivals" title="New Arrivals" products={products.slice(0, 4)} imageOffset={0} />
+        <ProductShowcase id="new-arrivals" title="New Arrivals" products={products.slice(0, 4)} loading={loading} />
         <div className="mx-auto max-w-6xl border-t border-black/10" />
-        <ProductShowcase title="Top Selling" products={products.slice(4, 8)} imageOffset={4} />
+        <ProductShowcase title="Top Selling" products={products.slice(4, 8)} loading={loading} />
         <DressStyleSection />
         <TestimonialsSection />
       </main>

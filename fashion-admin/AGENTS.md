@@ -1,89 +1,59 @@
-# Dashboard & Frontend Coding Rules & Standards
+# Admin Dashboard Agent Guide
 
-## 1. Tech Stack & Cấu Trúc Thư Mục
+## Stack and structure
 
-Phân hệ `dashboard` được xây dựng trên nền tảng:
-- **React 19** + **TypeScript**
-- **Vite** (Build tool & Dev server)
-- **Tailwind CSS v4** + **shadcn/ui** (@base-ui/react)
-- **React Router v7**
-- **Axios** (HTTP client)
+This app uses React 19, TypeScript, Vite, Tailwind CSS v4, shadcn-style components, React Router v7 and Axios.
 
-### Cấu trúc thư mục theo tính năng (Feature-based structure):
 ```text
-src/
-├── assets/          # Static assets (images, icons, fonts)
-├── components/      # UI components dùng chung
-│   ├── ui/          # Các components từ shadcn/ui (Button, Dialog, Dropdown, Table...)
-│   └── Logo.tsx     # Custom shared components
-├── features/        # Phân tách logic theo domain/feature
-│   ├── users/       # Ví dụ: UserPage, UserTable, UserForm, userApi.ts, types.ts
-│   ├── products/    # ProductPage, ProductList, productApi.ts...
-│   └── dashboard/   # Overview stats, charts...
-├── layouts/         # Layout components (DashboardLayout, AuthLayout, Sidebar, Navbar)
-├── lib/             # Tiện ích chung, api client (api.ts, utils.ts)
-├── routes/          # Cấu hình routes tập trung (dashboardRoutes.tsx, index.tsx)
-├── App.tsx          # RouterProvider & global providers
-├── index.css        # Tailwind v4 import & theme variables
-└── main.tsx         # Root render
+src/components/     # shared UI and primitives
+src/features/       # domain pages, services, types
+src/layouts/        # dashboard/auth layouts
+src/routes/         # route definitions and guards
+src/lib/api.ts      # shared Axios client
 ```
 
----
+Use the `@/` alias for imports. Keep feature API calls in that feature's service/API file.
 
-## 2. Quy Chuẩn Path Alias
+## UI design rules
 
-* Luôn sử dụng alias `@/` đại diện cho `src/` khi import:
-  ```tsx
-  // ĐÚNG:
-  import { Button } from "@/components/ui/button";
-  import api from "@/lib/api";
-  import { DashboardLayout } from "@/layouts/DashboardLayout";
+- Build mobile-first; support narrow screens without horizontal page overflow.
+- Use a consistent 8px spacing rhythm, readable 16px body text and visible focus states.
+- Keep dashboard density high but scannable: clear page title, toolbar, filters, table/card content and feedback states.
+- Use semantic colors with sufficient contrast; do not rely on color alone for status.
+- Use `lucide-react` icons, with `aria-label` for icon-only buttons.
+- Interactive controls should have comfortable touch targets (at least 44px where practical).
+- Use existing shared components before creating duplicates.
+- Tables must provide horizontal scrolling inside the table region, not on the whole page.
+- Modal/dialog content must be keyboard reachable, dismissible and responsive.
 
-  // TRÁNH relative path phức tạp:
-  import api from "../../../lib/api";
-  ```
+## Dashboard shell
 
----
+The header should contain logo, sidebar toggle, breadcrumb/current page, search, notification affordance, theme control and user menu when applicable. The sidebar must expose every implemented route and work on mobile. Keep loading, empty and error states visible and helpful.
 
-## 3. Quy Chuẩn Component & UI (Tailwind CSS v4 + shadcn)
+## Data and authentication
 
-1. **Thư viện UI**:
-   - Ưu tiên tái sử dụng các component trong `@/components/ui/`.
-   - Kết hợp `cn()` từ `@/lib/utils` để merge Tailwind classes động:
-     ```tsx
-     import { cn } from "@/lib/utils";
-     <div className={cn("p-4 rounded-lg", isActive && "bg-primary text-white")} />
-     ```
-2. **Icons**:
-   - Sử dụng icon từ `lucide-react` (ví dụ: `import { Users, ShoppingBag, Plus } from "lucide-react";`).
-3. **Responsive & Mobile-First**:
-   - Mọi trang dashboard cần responsive, hỗ trợ sidebar thu gọn/mở rộng trên màn hình nhỏ.
+- Use `@/lib/api`; do not call Axios directly from JSX.
+- Respect the API envelope `{ success, data, message }`.
+- Handle loading, error, empty and retry states for every data page.
+- Store auth tokens only in the established client storage keys and let the Axios interceptor attach them.
+- Do not display or log passwords or tokens.
 
----
+## React and TypeScript
 
-## 4. Quy Chuẩn Gọi API & State Management
+- Use functional components and typed props/state.
+- Avoid `any`; use domain types and `unknown` with narrowing.
+- Keep effects focused and avoid duplicate requests under React Strict Mode.
+- Keep forms labeled, validated and disabled while submitting.
 
-1. **Axios Client**:
-   - Luôn sử dụng client tập trung tại `@/lib/api`:
-     ```ts
-     import api from "@/lib/api";
-     ```
-2. **Phân Tách Service Layer Trong Feature**:
-   - Không gọi axios trực tiếp trong component render.
-   - Định nghĩa hàm API trong file `features/<feature>/api.ts` hoặc `<feature>Service.ts`:
-     ```ts
-     export const getUsers = async (): Promise<User[]> => {
-       const response = await api.get<User[]>("/users");
-       return response.data;
-     };
-     ```
-3. **Xử Lý Loading & Error**:
-   - Luôn xử lý các trạng thái: `isLoading`, `isError`, và hiển thị Skeleton / Error state thân thiện cho người dùng.
+## Routing
 
----
+Register every page in `src/routes/dashboardRoutes.tsx`. Protected pages must remain behind `ProtectedRoute`; auth pages must not render the dashboard shell.
 
-## 5. Quy Chuẩn Routing (React Router v7)
+## Verification
 
-* Mọi route trang mới phải được khai báo trong `src/routes/dashboardRoutes.tsx`.
-* Trang chi tiết hoặc thêm mới đặt nested dưới path cha (ví dụ: `/products`, `/products/new`, `/products/:id`).
+```bash
+npm run check:admin
+npm run build --workspace=fashion-admin
+```
 
+After visual changes, verify desktop, tablet and mobile widths and confirm API-backed pages show loading, success and failure states.

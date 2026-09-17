@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -53,6 +54,33 @@ enum DiscountType {
   FIXED
 }
 
+enum ProductMediaType {
+  IMAGE
+  VIDEO
+}
+
+enum QuestionStatus {
+  PENDING
+  ANSWERED
+  HIDDEN
+}
+
+enum ReturnStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  RECEIVED
+  REFUNDED
+  CANCELLED
+}
+
+enum InventoryTransactionType {
+  ADJUSTMENT
+  RETURN
+  SALE
+  RESTOCK
+}
+
 // -------------------------------------------------------------
 // USER & ADDRESS
 // -------------------------------------------------------------
@@ -70,6 +98,11 @@ model User {
   orders    Order[]
   reviews   Review[]
   wishlists Wishlist[]
+  questions ProductQuestion[]
+  answers ProductAnswer[]
+  helpfulReviews ReviewHelpful[]
+  viewEvents ProductViewEvent[]
+  returns ReturnRequest[]
   cart      Cart?
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
@@ -111,6 +144,7 @@ model Category {
   children    Category[] @relation("CategoryHierarchy")
   isActive    Boolean    @default(true)
   products    Product[]
+  brandPromotions PromotionCategory[]
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
@@ -129,11 +163,19 @@ model Product {
   shortDescription String?
   categoryId       String
   category         Category         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  brandId          String?
+  brand            Brand?           @relation(fields: [brandId], references: [id], onDelete: SetNull)
   basePrice        Float
   thumbnail        String?
   status           ProductStatus    @default(DRAFT)
   variants         ProductVariant[]
   images           ProductImage[]
+  media            ProductMedia[]
+  questions        ProductQuestion[]
+  viewEvents       ProductViewEvent[]
+  bundleItems      ProductBundleItem[] @relation("BundleProduct")
+  componentBundles ProductBundleItem[] @relation("BundleComponent")
+  promotionLinks   PromotionProduct[]
   reviews          Review[]
   wishlists        Wishlist[]
   createdAt        DateTime         @default(now())
@@ -141,6 +183,7 @@ model Product {
 
   @@index([categoryId])
   @@index([status])
+  @@index([brandId])
   @@map("products")
 }
 
@@ -154,6 +197,8 @@ model ProductVariant {
   stockQuantity Int         @default(0)
   cartItems     CartItem[]
   orderItems    OrderItem[]
+  media         ProductMedia[]
+  inventoryTransactions InventoryTransaction[]
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
@@ -221,6 +266,7 @@ model Order {
   coupon        Coupon?       @relation(fields: [couponId], references: [id], onDelete: SetNull)
   items         OrderItem[]
   payments      Payment[]
+  returns       ReturnRequest[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -244,6 +290,7 @@ model OrderItem {
   variant         ProductVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
   quantity        Int            @default(1)
   priceAtPurchase Float
+  returns         ReturnItem[]
   createdAt       DateTime       @default(now())
 
   @@index([orderId])
@@ -281,6 +328,8 @@ model Review {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   rating    Int      @default(5)
   comment   String?
+  media     ProductReviewMedia[]
+  helpful   ReviewHelpful[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -326,4 +375,192 @@ model Wishlist {
   @@unique([userId, productId])
   @@index([userId])
   @@map("wishlists")
+}
+
+model Brand {
+  id String @id @default(uuid())
+  name String
+  slug String @unique
+  logoUrl String?
+  isActive Boolean @default(true)
+  products Product[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProductMedia {
+  id String @id @default(uuid())
+  productId String
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variantId String?
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  type ProductMediaType
+  url String
+  altText String?
+  position Int @default(0)
+  createdAt DateTime @default(now())
+}
+
+model ProductReviewMedia {
+  id String @id @default(uuid())
+  reviewId String
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  type ProductMediaType
+  url String
+  position Int @default(0)
+  createdAt DateTime @default(now())
+}
+
+model ReviewHelpful {
+  reviewId String
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@id([reviewId, userId])
+}
+
+model ProductViewEvent {
+  id String @id @default(uuid())
+  productId String
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId String?
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  sessionId String?
+  createdAt DateTime @default(now())
+}
+
+model ProductQuestion {
+  id String @id @default(uuid())
+  productId String
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content String
+  status QuestionStatus @default(PENDING)
+  answers ProductAnswer[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProductAnswer {
+  id String @id @default(uuid())
+  questionId String
+  question ProductQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content String
+  isOfficial Boolean @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Promotion {
+  id String @id @default(uuid())
+  name String
+  discountType DiscountType
+  discountValue Float
+  startsAt DateTime
+  endsAt DateTime
+  priority Int @default(0)
+  isActive Boolean @default(true)
+  products PromotionProduct[]
+  categories PromotionCategory[]
+}
+
+model PromotionProduct {
+  promotionId String
+  promotion Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  productId String
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  @@id([promotionId, productId])
+}
+
+model PromotionCategory {
+  promotionId String
+  promotion Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  categoryId String
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  @@id([promotionId, categoryId])
+}
+
+model ProductBundle {
+  id String @id @default(uuid())
+  name String
+  discountType DiscountType?
+  discountValue Float?
+  isActive Boolean @default(true)
+  items ProductBundleItem[]
+}
+
+model ProductBundleItem {
+  id String @id @default(uuid())
+  bundleId String
+  bundle ProductBundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  productId String
+  product Product @relation("BundleProduct", fields: [productId], references: [id], onDelete: Cascade)
+  componentProductId String
+  componentProduct Product @relation("BundleComponent", fields: [componentProductId], references: [id], onDelete: Cascade)
+  quantity Int @default(1)
+}
+
+model ShippingZone {
+  id String @id @default(uuid())
+  name String
+  isActive Boolean @default(true)
+  provinces ShippingZoneProvince[]
+  rates ShippingRate[]
+}
+
+model ShippingZoneProvince {
+  id String @id @default(uuid())
+  provinceCode String @unique
+  provinceName String
+  zoneId String
+  zone ShippingZone @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+}
+
+model ShippingRate {
+  id String @id @default(uuid())
+  zoneId String
+  zone ShippingZone @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  name String
+  fee Float
+  freeFrom Float?
+  minDays Int
+  maxDays Int
+  isActive Boolean @default(true)
+}
+
+model ReturnRequest {
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderId String
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  reason String
+  status ReturnStatus @default(REQUESTED)
+  items ReturnItem[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ReturnItem {
+  id String @id @default(uuid())
+  returnRequestId String
+  returnRequest ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+  orderItemId String
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Restrict)
+  quantity Int
+  condition String?
+}
+
+model InventoryTransaction {
+  id String @id @default(uuid())
+  variantId String
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  type InventoryTransactionType
+  quantity Int
+  referenceId String?
+  note String?
+  createdAt DateTime @default(now())
 }

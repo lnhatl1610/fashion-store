@@ -3,12 +3,21 @@ import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { DashboardPage } from "@/features/dashboard";
 import { ProductPage } from "@/features/products";
 import { UserPage } from "@/features/users";
+import { CategoriesPage } from "@/features/categories";
+import { InventoryPage } from "@/features/inventory/InventoryPage";
+import { CouponsPage } from "@/features/coupons/CouponsPage";
+import { ReviewsPage } from "@/features/reviews/ReviewsPage";
+import { AuthPage } from "@/features/auth/AuthPage";
+import { ProtectedRoute } from "./ProtectedRoute";
 
 const dashboardRoutes = [
+  { path: "/login", element: <AuthPage /> },
+  { path: "/register", element: <AuthPage /> },
   {
     path: "/",
-    element: <DashboardLayout />,
+    element: <ProtectedRoute />,
     children: [
+      { path: "/", element: <DashboardLayout />, children: [
       {
         index: true,
         element: <Navigate to="/dashboard" replace />,
@@ -25,6 +34,11 @@ const dashboardRoutes = [
         path: "products",
         element: <ProductPage />,
       },
+      { path: "categories", element: <CategoriesPage /> },
+      { path: "inventory", element: <InventoryPage /> },
+      { path: "coupons", element: <CouponsPage /> },
+      { path: "reviews", element: <ReviewsPage /> },
+      ] },
     ],
   },
 ];
