@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
+    "test": "npm run build && node --test tests/order-policy.test.mjs",
     "watch": "tsc --watch",
     "serve": "nodemon dist/server.js",
     "dev": "concurrently \"npm run watch\" \"npm run serve\"",

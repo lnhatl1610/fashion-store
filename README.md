@@ -224,9 +224,8 @@ Run these commands from the repository root:
 | `npm run prisma:generate --workspace=fashion-api` | Generate the Prisma client |
 | `npm run prisma:migrate --workspace=fashion-api` | Create/apply a local development migration |
 | `npm run prisma:studio --workspace=fashion-api` | Open Prisma Studio |
+| `npm test` | Build the API and run its Node test suite |
 | `npm run test:e2e` | Run Playwright end-to-end tests |
-
-The API test files use Node's test APIs and Vitest imports, but a dedicated `test` script is not currently declared in `fashion-api/package.json`. Configure the test runner before relying on `npm test` in CI.
 
 ## Contributing
 
